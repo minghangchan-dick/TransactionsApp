@@ -7,8 +7,9 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
+COPY ["*.sln", "./"]
 COPY ["TransactionsApp/TransactionsApp.csproj", "TransactionsApp/"]
-RUN dotnet restore "TransactionsApp/TransactionsApp.csproj"
+RUN dotnet restore
 COPY . .
 WORKDIR "/src/TransactionsApp"
 RUN dotnet build "TransactionsApp.csproj" -c Release -o /app/build
@@ -19,7 +20,4 @@ RUN dotnet publish "TransactionsApp.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-RUN dotnet tool install --global dotnet-ef
-RUN dotnet ef migrations add init --context TransactionContext
-RUN dotnet ef database update --context TransactionContext
 ENTRYPOINT ["dotnet", "TransactionsApp.dll"]

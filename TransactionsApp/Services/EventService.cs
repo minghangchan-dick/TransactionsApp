@@ -1,4 +1,5 @@
-﻿using TransactionsApp.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using TransactionsApp.Data;
 using TransactionsApp.Interface;
 using TransactionsApp.Models;
 
@@ -23,20 +24,15 @@ namespace TransactionsApp.Services
 
         public void HandleTransactionEvent(Transaction transaction)
         {
-            try
-            {
-                _context.Transaction.Add(transaction);
-                transaction.Status = _context.SaveChanges() > 0? "SUCCESS": "FAILED";
-            }catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                transaction.Status = "FAILED";
-            }
+            var _t = from t in _context.Transaction
+                    where EF.Functions.DateDiffSecond(t.Date, transaction.Date) <= 30 && transaction.Amount == t.Amount
+                    select t;
+            var is_repeated = _t.Any();
 
-            _context.Transaction.Update(transaction);
+            transaction.Status = is_repeated ? Transaction.TransactionStatus.REPEATED : Transaction.TransactionStatus.NORMAL;
+
+            _context.Transaction.Add(transaction);
             _context.SaveChanges();
         }
-
-       
     }
 }

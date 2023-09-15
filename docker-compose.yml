@@ -2,6 +2,7 @@ version: "3.7"
 
 services:
   mysql:
+    container_name: mysql
     image: mysql:8.1
     volumes:
       - mysql-data:/var/lib/mysql
@@ -10,6 +11,16 @@ services:
       MYSQL_DATABASE: app
     ports:
       - 33306:3306
+  
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8443:443
+      - 8080:80
+    environment:
+      - TransactionsAppContext=server=mysql;port=3306;database=app;user=root;password=P@ssw0rd
 
 volumes:
   mysql-data:

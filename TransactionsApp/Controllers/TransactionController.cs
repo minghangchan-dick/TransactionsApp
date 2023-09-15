@@ -33,19 +33,24 @@ namespace TransactionsApp.Controllers
 
         // GET: /Transaction
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions()
+        public async Task<ActionResult<IEnumerable<TransactionResponseDto>>> GetTransactions()
         {
             if (_context.Transaction == null)
             {
                 return NotFound();
             }
-            return await _context.Transaction.ToListAsync();
+            
+            var result = (await _context.Transaction.ToListAsync()).Select(t => {
+                return new TransactionResponseDto(t);
+            });
+
+            return Ok(result);
         }
 
         // POST: /Transaction
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Transaction>> PostTransaction(Transaction transaction)
+        public async Task<ActionResult> PostTransaction(Transaction transaction)
         {
             RaiseTransactionEvent(transaction);
 

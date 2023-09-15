@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using TransactionsApp.Extension;
 using TransactionsApp.Data;
 using TransactionsApp.Interface;
 using TransactionsApp.Services;
@@ -11,12 +12,12 @@ namespace TransactionsApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var connection_string = Environment.GetEnvironmentVariable("TransactionsAppContext")?? builder.Configuration.GetConnectionString("TransactionsAppContext")?? throw new InvalidOperationException("Connection string 'TransactionsAppContext' not found.");          
             builder.Services.AddDbContext<TransactionContext>(options =>
-                options.UseMySql(builder.Configuration.GetConnectionString("TransactionsAppContext") ?? throw new InvalidOperationException("Connection string 'TransactionsAppContext' not found."),
-                ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("TransactionsAppContext"))));
+                options.UseMySql(connection_string,ServerVersion.AutoDetect(connection_string)));
+
 
             // Add services to the container.
-
             builder.Services.AddControllers();
             builder.Services.AddScoped<IEventService, EventService>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -39,7 +40,7 @@ namespace TransactionsApp
 
             app.MapControllers();
 
-            app.Run();
+            app.MigrateDatabase<TransactionContext>().Run();
         }
     }
 }
